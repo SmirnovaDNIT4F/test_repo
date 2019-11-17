@@ -208,7 +208,3 @@ INNER JOIN public.ent_info ON sec_name."ent_name"=public.ent_info."ent_name") as
 INNER JOIN public.ratings_task ON thrd_name."assing_date"=public.ratings_task."date"
 AND thrd_name."ent_id"=public.ratings_task."ent_id" 
 ; 
-
-
-
-
