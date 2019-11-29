@@ -1,3 +1,6 @@
+-- Комментарий
+-- А как Вы обрабатываете данные исходных файлов до загрузки в БД?
+
 -- 1.1 Создаем таблицу credit_events_task в БД с требуемым составом полей в нужных форматах
 
 CREATE TABLE public.credit_events_task
@@ -124,6 +127,9 @@ AND ratings_task."horizon"=ratings_info."horizon"
 AND ratings_task."scale_typer"=ratings_info."scale_typer" 
 AND ratings_task."currency"=ratings_info."currency";
 
+-- Комментарий:
+-- Это не сработает. Т.к. в если хоть в одном поле из условия WHERE значения NULL, операция сравнения "=", даст ЛОЖЬ, и в такой строке rat_key останется NULL.  
+
 -- 4.5 Присвоение полю rat_key в таблице ratings_task ограничения внешнего ключа
 ALTER TABLE public.ratings_task
 ADD CONSTRAINT fr_key_1 FOREIGN KEY (rat_key) REFERENCES public.ratings_info (rat_key);
@@ -173,6 +179,9 @@ where ratings_task."ent_name"=ent_info."ent_name"
 ALTER TABLE public.ratings_task
 ADD CONSTRAINT fr_key_2 FOREIGN KEY (ent_id) REFERENCES public.ent_info (ent_id);
 
+-- Комментарий:
+-- Связи нужны еще для таблиц credit_events и scale_exp.
+
 -- 5.6 Удаление вынесенной информации из исходной таблицы ratings_task, а именно столбцов 
 -- "rat_id", "agency_id", "rat_industry", "rat_type", "horizon", "scale_typer", "currency", "backed_flag", 
 -- "ent_name", "okpo", "ogrn", "inn", "finst"
@@ -198,13 +207,16 @@ select "assing_date", "ent_name", "grade"
 from (select assing_date, ent_id, public.ent_info."ent_name"
 from (select "ent_name", max("date") as assing_date
 from public.ent_info INNER JOIN 
-	(select *
-	from public.ratings_task INNER JOIN public.ratings_info
-	ON public.ratings_task."rat_key"=public.ratings_info."rat_key" 
-	WHERE "rat_id"=47 AND "change" NOT IN ('снят', 'приостановлен') AND "date" <= '11.11.2014') as first_name
-	ON public.ent_info."ent_id"=first_name."ent_id"
+    (select *
+    from public.ratings_task INNER JOIN public.ratings_info
+    ON public.ratings_task."rat_key"=public.ratings_info."rat_key" 
+    WHERE "rat_id"=47 AND "change" NOT IN ('снят', 'приостановлен') AND "date" <= '11.11.2014') as first_name
+    ON public.ent_info."ent_id"=first_name."ent_id"
 GROUP BY "ent_name") as sec_name
 INNER JOIN public.ent_info ON sec_name."ent_name"=public.ent_info."ent_name") as thrd_name
 INNER JOIN public.ratings_task ON thrd_name."assing_date"=public.ratings_task."date"
 AND thrd_name."ent_id"=public.ratings_task."ent_id" 
 ; 
+
+-- Комментарий:
+-- Вывод запроса не соответствует заданию. Среди выводимых значений есть "Cнят". 
