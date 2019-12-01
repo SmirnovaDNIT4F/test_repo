@@ -1,7 +1,19 @@
 -- Комментарий
 -- А как Вы обрабатываете данные исходных файлов до загрузки в БД?
 
+-- Начало работы.
+-- Для работы с данными необходимо установить СУБД (система управления базами данных) - PostgreSQL. 
+-- Также для выполнения определенных команд потребуется терминал SQL Shell.
+-- Для удобства в дальнейшей работе в исходной таблице ratings_task.xlsx в столбце, содержащем информацию о дате действия (date), 
+-- был изменен формат с числового на формат даты. Далее файлы credit_events_task.xls и ratings_task.xlsx необходимо 
+-- сохранить в формате .csv. Для дальнейшего импорта данных из таблиц credit_events_task.csv, 
+-- ratings_task.csv и scale_EXP_task.csv через PostgreSQL проверяем, что файлы находятся в папке с публичным доступом 
+-- (~\User\Public) или перемещаем их туда. 
+
 -- 1.1 Создаем таблицу credit_events_task в БД с требуемым составом полей в нужных форматах
+-- для inn - числовой формат с большим диапазоном bigint
+-- для date - формат даты date
+-- для event - формат текста text
 
 CREATE TABLE public.credit_events_task
 (
@@ -120,12 +132,20 @@ alter table ratings_task add column "rat_key" bigint;
 update ratings_task
 set rat_key=ratings_info.rat_key
 from ratings_info
-where ratings_task."rat_id"=ratings_info."rat_id" AND ratings_task."agency_id"=ratings_info."agency_id" 
-AND ratings_task."rat_industry"=ratings_info."rat_industry" 
-AND ratings_task."rat_type"=ratings_info."rat_type" 
-AND ratings_task."horizon"=ratings_info."horizon" 
-AND ratings_task."scale_typer"=ratings_info."scale_typer" 
-AND ratings_task."currency"=ratings_info."currency";
+where ratings_task."rat_id"=ratings_info."rat_id" AND ratings_task."agency_id"=ratings_info."agency_id" AND
+(ratings_task."rat_industry"=ratings_info."rat_industry" 
+OR (ratings_task."rat_industry" IS NULL AND ratings_info."rat_industry" IS NULL)) AND
+(ratings_task."rat_type"=ratings_info."rat_type" 
+OR (ratings_task."rat_type" IS NULL AND ratings_info."rat_type" IS NULL)) AND
+(ratings_task."horizon"=ratings_info."horizon"
+OR (ratings_task."horizon"IS NULL AND ratings_info."horizon" IS NULL)) AND
+(ratings_task."scale_typer"=ratings_info."scale_typer"
+OR (ratings_task."scale_typer" IS NULL AND ratings_info."scale_typer" IS NULL)) AND
+(ratings_task."currency"=ratings_info."currency"
+OR  (ratings_task."currency" IS NULL AND ratings_info."currency" IS NULL)) AND
+(ratings_task."backed_flag"=ratings_info."backed_flag"
+OR  (ratings_task."backed_flag" IS NULL AND ratings_info."backed_flag" IS NULL)) 
+;
 
 -- Комментарий:
 -- Это не сработает. Т.к. в если хоть в одном поле из условия WHERE значения NULL, операция сравнения "=", даст ЛОЖЬ, и в такой строке rat_key останется NULL.  
