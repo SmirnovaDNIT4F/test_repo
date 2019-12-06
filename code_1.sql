@@ -223,19 +223,23 @@ drop column "finst";
 
 -- 6. Выведение актуальных рейтингов на 11.11.2014 для вида рейтинга с числовым кодом 47.
 
-select "assing_date", "ent_name", "grade"
-from (select assing_date, ent_id, public.ent_info."ent_name"
-from (select "ent_name", max("date") as assing_date
-from public.ent_info INNER JOIN 
-    (select *
-    from public.ratings_task INNER JOIN public.ratings_info
-    ON public.ratings_task."rat_key"=public.ratings_info."rat_key" 
-    WHERE "rat_id"=47 AND "change" NOT IN ('снят', 'приостановлен') AND "date" <= '11.11.2014') as first_name
-    ON public.ent_info."ent_id"=first_name."ent_id"
-GROUP BY "ent_name") as sec_name
-INNER JOIN public.ent_info ON sec_name."ent_name"=public.ent_info."ent_name") as thrd_name
-INNER JOIN public.ratings_task ON thrd_name."assing_date"=public.ratings_task."date"
-AND thrd_name."ent_id"=public.ratings_task."ent_id" 
+select ent_name, grade, assign_date
+from public.ent_info inner join
+(select *
+ from public.ratings_info inner join
+(select public.ratings_task."ent_id", public.ratings_task."rat_key", grade, change, assign_date
+from public.ratings_task inner join
+(select max(date) as assign_date, ent_id 
+from public.ratings_task
+WHERE "date" <= '11.11.2014'
+group by ent_id) as tb1
+on public.ratings_task."date" = tb1."assign_date"
+and public.ratings_task."ent_id" = tb1."ent_id") as tb2
+ on public.ratings_info."rat_key"=tb2."rat_key") as tb3
+on public.ent_info."ent_id"=tb3."ent_id"
+where "change" <> 'снят' 
+and "change" <> 'приостановлен'
+and rat_id = 47
 ; 
 
 -- Комментарий:
