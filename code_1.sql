@@ -201,8 +201,37 @@ ADD CONSTRAINT fr_key_2 FOREIGN KEY (ent_id) REFERENCES public.ent_info (ent_id)
 
 -- Комментарий:
 -- Связи нужны еще для таблиц credit_events и scale_exp.
+     
+-- 5.6 Добавление в таблицу ratings_task поля с кодами-ссылками на таблицу scale_exp_task
+alter table ratings_task add column "grade_id" smallint;
 
--- 5.6 Удаление вынесенной информации из исходной таблицы ratings_task, а именно столбцов 
+-- 5.7 Заполнение поля с кодами-ссылками на таблицу scale_exp_task
+update ratings_task
+set grade_id=scale_exp_task."grade_id"
+from scale_exp_task
+where ratings_task."grade"=scale_exp_task."grade"
+;
+
+-- 5.8 Присвоение полю grade_id в таблице ratings_task ограничения внешнего ключа
+ALTER TABLE public.ratings_task
+ADD CONSTRAINT fr_key_3 FOREIGN KEY (grade_id) REFERENCES public.scale_exp_task (grade_id);
+     
+-- 5.9 Добавление в таблицу credit_events_task поля с кодами-ссылками на таблицу ent_info
+alter table credit_events_task add column "ent_id" smallint;
+
+-- 5.10 Заполнение поля с кодами-ссылками на таблицу ent_info
+update credit_events_task
+set ent_id=ent_info."ent_id"
+from ent_info
+where credit_events_task."inn"=ent_info."inn"
+;
+
+-- 5.11 Присвоение полю ent_id в таблице credit_events_task ограничения внешнего ключа
+ALTER TABLE public.credit_events_task
+ADD CONSTRAINT fr_key_4 FOREIGN KEY (ent_id) REFERENCES public.ent_info (ent_id);
+
+
+-- 5.12 Удаление вынесенной информации из исходной таблицы ratings_task, а именно столбцов 
 -- "rat_id", "agency_id", "rat_industry", "rat_type", "horizon", "scale_typer", "currency", "backed_flag", 
 -- "ent_name", "okpo", "ogrn", "inn", "finst"
 
